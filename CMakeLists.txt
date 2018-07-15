@@ -2,13 +2,24 @@ cmake_minimum_required(VERSION 3.5)
 
 project(DoubleDispatch VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
-set(GTEST_MAIN_LIBRARY /usr/lib)
+# Manage dependencies
 
 enable_testing()
-find_package(GTest REQUIRED)
+
+# Finding Threads libs
 find_package(Threads REQUIRED)
+
+# Setting up Conan
+if (NOT EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+    message(STATUS "Configuring dependencies with conan")
+    execute_process(COMMAND conan install ${CMAKE_CURRENT_LIST_DIR} --build missing)
+endif()
+
+# Setting output directory to bin
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 include(CTest)
 
@@ -38,6 +49,6 @@ target_include_directories(testrunner PRIVATE src test)
 
 target_compile_options(testrunner PRIVATE -Wextra -pedantic)
 
-target_link_libraries(testrunner PRIVATE gtest gtest_main ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(testrunner PRIVATE ${CONAN_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-add_test(NAME TypeConversionTest COMMAND testrunner)
+add_test(NAME AllTests COMMAND testrunner)
